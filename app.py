@@ -17,7 +17,7 @@ from flask import url_for
 from authlib.integrations.flask_client import OAuth
 from six.moves.urllib.parse import urlencode
 from flask import redirect
-from dotenv import load_dotenv, find_dotenv
+#from dotenv import load_dotenv, find_dotenv
 #
 # local imports
 from models import db, setup_db, Movie, Actor
@@ -30,17 +30,17 @@ from auth import AuthError, requires_auth
 def create_app(test_config=None):
     app = Flask(__name__)
     oauth = OAuth(app)
-	auth0 = oauth.register(
-	    'auth0',
-	    client_id='aCA7EjAuTW1h8cYBS8BnPz9lKXvKqlbM',
-	    client_secret='PnZGgR-m42u4e12Mpr81jgFc1J48O4mQBB6fNt6fQOZBu6hZ5bKdEQBMghcHLgHB',
-	    api_base_url='https://fsnd-finalproject-burge.us.auth0.com',
-	    access_token_url='https://fsnd-finalproject-burge.us.auth0.com/oauth/token',
-	    authorize_url='https://fsnd-finalproject-burge.us.auth0.com/authorize',
-	    client_kwargs={
-	        'scope': 'openid profile email',
-	    },
-	)    
+    auth0 = oauth.register(
+        'auth0',
+        client_id='aCA7EjAuTW1h8cYBS8BnPz9lKXvKqlbM',
+        client_secret='PnZGgR-m42u4e12Mpr81jgFc1J48O4mQBB6fNt6fQOZBu6hZ5bKdEQBMghcHLgHB',
+        api_base_url='https://fsnd-finalproject-burge.us.auth0.com',
+        access_token_url='https://fsnd-finalproject-burge.us.auth0.com/oauth/token',
+        authorize_url='https://fsnd-finalproject-burge.us.auth0.com/authorize',
+        client_kwargs={
+            'scope': 'openid profile email',
+        },
+    )    
     setup_db(app)
     # instantiate CORS and add after_request decorator and CORS headers
     cors = CORS(app)
@@ -60,26 +60,26 @@ def create_app(test_config=None):
     #####################################################################
 
 
-	@app.route('/callback')
-	def callback_handling():
-	    # Handles response from token endpoint
-	    auth0.authorize_access_token()
-	    resp = auth0.get('userinfo')
-	    userinfo = resp.json()
+    @app.route('/callback')
+    def callback_handling():
+        # Handles response from token endpoint
+        auth0.authorize_access_token()
+        resp = auth0.get('userinfo')
+        userinfo = resp.json()
 
-	    # Store the user information in flask session.
-	    session['jwt_payload'] = userinfo
-	    session['profile'] = {
-	        'user_id': userinfo['sub'],
-	        'name': userinfo['name'],
-	        'picture': userinfo['picture']
-	    }
-	    return redirect('/dashboard')
+        # Store the user information in flask session.
+        session['jwt_payload'] = userinfo
+        session['profile'] = {
+            'user_id': userinfo['sub'],
+            'name': userinfo['name'],
+            'picture': userinfo['picture']
+        }
+        return redirect('/dashboard')
 
 
-	@app.route('/login')
-	def login():
-	    return auth0.authorize_redirect(redirect_uri='http://127.0.0.1:5000/login-results')
+    @app.route('/login')
+    def login():
+        return auth0.authorize_redirect(redirect_uri='http://127.0.0.1:5000/login-results')
 
 
     # --------------------------------------------------------------------
