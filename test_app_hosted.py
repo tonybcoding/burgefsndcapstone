@@ -32,35 +32,27 @@ def print_greeting():
 
 # delete all entries. this will clear the N:M table since requests
 # are ran through deployed python using SQL Alchemy ORM
-
-# TODO: clean this up and use get_resource function
 def clean_database(acct):
     #
-    # delete actors
     header = {
         "Authorization": f"Bearer {acct['jwt']}",
         "Content-Type": "application/json"
     }
-    print("...attempting to delete actors...", end='')
-    res = requests.get(URL + "actors", headers=header)
-    if not res.json()['success']:
-        print("*** ACCESS ERROR: CHECK JWT expiraton or permissions ***")
-    else:
-        actor_list = res.json()['actors']
-        for actor in actor_list:
-            res = requests.delete(URL + "actors/" + str(actor['id']), headers=header) 
-        print("Success")      
-    #
-    # delete movies
-    print("...attempting to delete movies...", end='')
-    res = requests.get(URL + "movies", headers=header)
-    if not res.json()['success']:
-        print("*** ACCESS ERROR: CHECK JWT expiration or permissions ***")
-    else:
-        movie_list = res.json()['movies']
-        for movie in movie_list:
-            res = requests.delete(URL + "movies/" + str(actor['id']), headers=header)
-        print("Success")
+    for resource in ["movies", "actors"]:
+        resource_list = get_resource(acct, resource)
+        if len(resource_list) == 0:
+            print(f"Error deleting {resource}. Either no {resource} exist, " +
+                  "or the user does not have permission/JWTs expired")
+        for item in resource_list:
+            if resource == "actors":
+                print(f"...attempting to delete actor: {item['name']}...", end='')
+            else:
+                print(f"...attempting to delete movie: {item['title']}...", end='')
+            res = requests.delete(URL + f"{resource}/" + str(item['id']), headers=header)               
+            if res.json()['success']:
+                print("Success")
+            else:
+                print("Failed")
 
 # function to get actor or movie list based on "resource" argument passed
 def get_resource(acct, resource):
@@ -70,12 +62,28 @@ def get_resource(acct, resource):
       "Authorization": f"Bearer {acct['jwt']}",
       "Content-Type": "application/json"
     }
-    res = requests.get(URL + resource, headers=header)
+    print("\n\n\nIn get_resource:", url)
+
+
+
+
+    # TODO: some project here where id is not returned
+    res = requests.get(url, headers=header)
     if res.json()['success']:
         resource_list = res.json()[f'{resource}']
+        # TODO:
+        # this does not return movie id for some reason?
+        print("----> resource_list from get_resource")
+        print("----> URL: ", url)
+        print("----> header: ", header)
+        print("----> list: ", resource_list)
     else:
         resource_list = []
     return resource_list
+
+
+
+
 
 # function to add new actor or movie based on "resource" agrument passed
 def add_resource(acct, resource, payload):

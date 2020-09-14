@@ -57,6 +57,7 @@ def create_app(test_config=None):
             actor_list = [actor.create_dict() for actor in movie.castmembers]
             # append movie entry to movie_list
             movie_list.append({
+                "id": movie.id,
                 "title": movie.title,
                 "release_date": movie.release_date,
                 "actors": actor_list
