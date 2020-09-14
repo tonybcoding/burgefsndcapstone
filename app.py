@@ -70,7 +70,7 @@ def create_app(test_config=None):
     # empty list is acceptable if no actors have been added
     # list to be sorted in ascending order by actor name
     @app.route('/actors')
-    @requires_auth('get:movies')
+    @requires_auth('get:actors')
     def get_actors(jwt):
         #
         actors = Actor.query.order_by(Actor.name).all()
@@ -312,6 +312,14 @@ def create_app(test_config=None):
             "success": False,
             "error": 400,
             "message": "bad request"
+        }), 400
+
+    @app.errorhandler(401)
+    def bad_request(error):
+        return jsonify({
+            "success": False,
+            "error": 401,
+            "message": "unauthorized access"
         }), 400
 
     @app.errorhandler(404)
