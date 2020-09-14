@@ -32,51 +32,50 @@ def print_greeting():
 
 # delete all entries. this will clear the N:M table since requests
 # are ran through deployed python using SQL Alchemy ORM
-def clean_database():
+
+# TODO: clean this up and use get_resource function
+def clean_database(acct):
     #
     # delete actors
     header = {
-        "Authorization": f"Bearer {jwt_ep}",
+        "Authorization": f"Bearer {acct['jwt']}",
         "Content-Type": "application/json"
     }
+    print("...attempting to delete actors...", end='')
     res = requests.get(URL + "actors", headers=header)
-    for item in res:
-        print(item)
-    if res is None:
-        print("*** ACCESS ERROR: CHECK JWTs ***")
+    if not res.json()['success']:
+        print("*** ACCESS ERROR: CHECK JWT expiraton or permissions ***")
     else:
         actor_list = res.json()['actors']
         for actor in actor_list:
-            res = requests.delete(URL + "actors/" + str(actor['id']), headers=header)        
+            res = requests.delete(URL + "actors/" + str(actor['id']), headers=header) 
+        print("Success")      
     #
     # delete movies
+    print("...attempting to delete movies...", end='')
     res = requests.get(URL + "movies", headers=header)
-    movie_list = res.json()['movies']
-    for movie in movie_list:
-        res = requests.delete(URL + "movies/" + str(actor['id']), headers=header)
+    if not res.json()['success']:
+        print("*** ACCESS ERROR: CHECK JWT expiration or permissions ***")
+    else:
+        movie_list = res.json()['movies']
+        for movie in movie_list:
+            res = requests.delete(URL + "movies/" + str(actor['id']), headers=header)
+        print("Success")
 
-# function to get actor list
-def get_actors(acct):
+# function to get actor or movie list based on "resource" argument passed
+def get_resource(acct, resource):
     #
-    url = URL + "actors"
+    url = URL + resource
     header = {
       "Authorization": f"Bearer {acct['jwt']}",
       "Content-Type": "application/json"
     }
-    res = requests.get(URL + "actors", headers=header)
-    actor_list = res.json()['actors']
-    return actor_list
-
-def get_movies(acct):
-    #
-    url = URL + "movies"
-    header = {
-      "Authorization": f"Bearer {acct['jwt']}",
-      "Content-Type": "application/json"
-    }
-    res = requests.get(URL + "movies", headers=header)
-    movie_list = res.json()['movies']
-    return movie_list
+    res = requests.get(URL + resource, headers=header)
+    if res.json()['success']:
+        resource_list = res.json()[f'{resource}']
+    else:
+        resource_list = []
+    return resource_list
 
 # function to add new actor or movie based on "resource" agrument passed
 def add_resource(acct, resource, payload):
@@ -87,26 +86,30 @@ def add_resource(acct, resource, payload):
       "Content-Type": "application/json"
     }
     res = requests.post(url, data=payload, headers=header)
-    print("adding: " + payload + "...", end ='')
-    for entry in res:
-        print("with results:", entry)
+    print("...attempting to add: " + payload + "...", end ='')
+    print("with results:", res.json()['success'])
 
 
 # main app
 #
 print_greeting()
-
+#
+# traverse each account type and perform hosted tests
 for acct in ACCTS:
     print("\n" * 2)
     print("--------------------------------------------------------------")
-    print("* Clean up database for next account test *")    
-    print(f"Testing: {acct['type']} - if not Executive Producer or " +
-          "Casting Director, this should fail")
- 
-    clean_database()
+    print("* Clean up database for next account test *")
+    print("--------------------------------------------------------------")
+    print(f">>> Testing: {acct['type']}")
+     #
+    # clean datase for each run - should work unless user does not have
+    # permissions or if JWTs have expired
+    clean_database(acct)
     #
-    # add actors
-    print(f"for {acct['type']}")
+    # -----------------------------------------------------------------------
+    # add actors - properly formatted, should work unless user does not have
+    # permission or if JWTs have expried
+    print("\n* Adding actors *")   
     # for actor in ACTORS:
     #     add_actor(acct, actor)
     payload = ""
@@ -114,26 +117,48 @@ for acct in ACCTS:
         payload = ('{"name": ' + '"' + actor[0] + '"' + ', "dob": ' + '"' +
                    actor[1] + '"' + ', "gender": ' + '"' + actor[2] + '"}')
         add_resource(acct, "actors", payload)
+    # TODO add actor with missing data
+
     #
-    # add movies
+    # -----------------------------------------------------------------------
+    # add movies - properly formatted, should work unless user does not have
+    # permission or if JWTs have expried
     # first must find ID of actors
-    actor_list = get_actors(acct)
-    for movie in MOVIES:
-        payload = ('{"title": ' + '"' + movie[0] + '"' + ', "release_date": ' +
-                   '"' + movie[1] + ', "cast": ' + '[')
-        cast_num = randint(1, len(actor_list))
-        for x in range (1, cast_num):
-            print(actor_list[x -1])
-            payload += str(actor_list[x-1]['id'])
-            if x != cast_num - 1:
-                payload += ", "
-        payload += "]}"
-        print(payload)
-        add_resource(acct, "movies", payload)
+    print("\n* Adding movies *")       
+    #actor_list = get_actors(acct)
+    actor_list = get_resource(acct, "actors")
+    if len(actor_list) == 0:
+        print("No actors available to add movies. Check permissions when adding actors.")
+    else:
+        for movie in MOVIES:
+            payload = ('{"title": ' + '"' + movie[0] + '"' + ', "release_date": ' +
+                       '"' + movie[1] + '"' + ', "cast": ' + '[')
+            # choose random number to determine how many actors to add to movie
+            # to match actor_list indeces, had to modify with -1 on len
+            # then add one to represent a number from 1 to actors
+            cast_num = randint(0, len(actor_list) - 1) + 1
+            for x in range (0, cast_num):
+                payload += str(actor_list[x]['id'])
+                if x != cast_num - 1:
+                    payload += ", "
+            payload += "]}"
+            add_resource(acct, "movies", payload)
+    # TODO add movie with missing fields, no cast, and wrong actor IDs
+
+    #
+    # -----------------------------------------------------------------------
+    # update actor
+
+    #
+    # -----------------------------------------------------------------------
+    # update movie
+
+    #
+    # -----------------------------------------------------------------------
+    # delete actor
+
+    #
+    # -----------------------------------------------------------------------
+    # delete movie
 
 
-
-
-
-
-# for each acount type/jwt, run each test
