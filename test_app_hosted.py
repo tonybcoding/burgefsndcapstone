@@ -1,7 +1,15 @@
+#########################################################################
 #
-# all get/post/delete/patch errors are handled by deployed app except expired JWTs
-# in parsing methods in this app. for the pupose of this quick hosted test app,
-# I am not handling those errors
+# @file name: test_app_hosted.py
+# @purpose: test file of backend app on hosted heroku instance
+# @out_of_scope: no need to test every possible error. that is conducted
+# in the unit tests. Mostly testing permissions here with a few error
+# conditions added
+# @author: Tony Burge
+# @date: 2020-09-12
+#
+#########################################################################
+#
 #
 # global imports
 import requests
@@ -9,11 +17,8 @@ from flask import abort
 from random import randint
 #
 # local imports
-from test_config import jwt_ep, jwt_cd, jwt_ca, jwt_no, ACCTS
-from test_config import movie1, movie2, movie3, actor1, actor2
-from test_config import umovie1, umovie2, umovie3, uactor1, uactor2
+from test_config import ACCTS
 from test_config import ACTORS, MOVIES
-
 #
 # constants
 URL = "https://burgefsndcapstone.herokuapp.com/"
@@ -24,11 +29,11 @@ URL = "https://burgefsndcapstone.herokuapp.com/"
 #
 # display greeting
 def print_greeting():
-    print("\n" * 10)
-    print("#" * 50)
+    print("\n" * 50)
+    print("#" * 80)
     print("Testing Casting Application deployed on Heroku")
     print("Submitted by Tony Burge")
-    print("#" * 50)
+    print("#" * 80)
 
 # delete all entries. this will clear the N:M table since requests
 # are ran through deployed python using SQL Alchemy ORM
@@ -40,19 +45,9 @@ def clean_database(acct):
     }
     for resource in ["movies", "actors"]:
         resource_list = get_resource(acct, resource)
-        if len(resource_list) == 0:
-            print(f"Error deleting {resource}. Either no {resource} exist, " +
-                  "or the user does not have permission/JWTs expired")
         for item in resource_list:
-            if resource == "actors":
-                print(f"...attempting to delete actor: {item['name']}...", end='')
-            else:
-                print(f"...attempting to delete movie: {item['title']}...", end='')
-            res = requests.delete(URL + f"{resource}/" + str(item['id']), headers=header)               
-            if res.json()['success']:
-                print("Success")
-            else:
-                print("Failed")
+            res = (requests.delete(URL + f"{resource}/" + str(item['id']),
+                   headers=header))
 
 # function to get actor or movie list based on "resource" argument passed
 def get_resource(acct, resource):
@@ -62,28 +57,12 @@ def get_resource(acct, resource):
       "Authorization": f"Bearer {acct['jwt']}",
       "Content-Type": "application/json"
     }
-    print("\n\n\nIn get_resource:", url)
-
-
-
-
-    # TODO: some project here where id is not returned
     res = requests.get(url, headers=header)
     if res.json()['success']:
         resource_list = res.json()[f'{resource}']
-        # TODO:
-        # this does not return movie id for some reason?
-        print("----> resource_list from get_resource")
-        print("----> URL: ", url)
-        print("----> header: ", header)
-        print("----> list: ", resource_list)
     else:
         resource_list = []
     return resource_list
-
-
-
-
 
 # function to add new actor or movie based on "resource" agrument passed
 def add_resource(acct, resource, payload):
@@ -97,6 +76,15 @@ def add_resource(acct, resource, payload):
     print("...attempting to add: " + payload + "...", end ='')
     print("with results:", res.json()['success'])
 
+# function to update actor or movie based on "resource" argument based
+def update_resource(acct, resource, payload, id):
+    #
+    url = URL + resource + "/" + str(id)
+    header = {
+      "Authorization": f"Bearer {acct['jwt']}",
+      "Content-Type": "application/json"
+    }
+    res = requests.patch(url, data=payload, headers=header)
 
 # main app
 #
@@ -104,20 +92,21 @@ print_greeting()
 #
 # traverse each account type and perform hosted tests
 for acct in ACCTS:
+    #
     print("\n" * 2)
     print("--------------------------------------------------------------")
-    print("* Clean up database for next account test *")
-    print("--------------------------------------------------------------")
     print(f">>> Testing: {acct['type']}")
-     #
-    # clean datase for each run - should work unless user does not have
-    # permissions or if JWTs have expired
+    #
+    # clean database with executive producer each time. This is to ensure
+    # data is all clear before testing. Should work unless JWT for exec
+    # producer has expired or if records do not exist
+    print("\n* Cleaning databased using executive producer for next role test")
     clean_database(acct)
     #
     # -----------------------------------------------------------------------
     # add actors - properly formatted, should work unless user does not have
     # permission or if JWTs have expried
-    print("\n* Adding actors *")   
+    print("\n* Adding actors: should pass if use has permission *")   
     # for actor in ACTORS:
     #     add_actor(acct, actor)
     payload = ""
@@ -125,22 +114,28 @@ for acct in ACCTS:
         payload = ('{"name": ' + '"' + actor[0] + '"' + ', "dob": ' + '"' +
                    actor[1] + '"' + ', "gender": ' + '"' + actor[2] + '"}')
         add_resource(acct, "actors", payload)
-    # TODO add actor with missing data
+    #
+    # add actor with missing data. this should fail even if user
+    # has permission to add actor
+    print("\nMissing data. Should fail regardless of permission.")
+    payload = '{"name": "Jonny Depp"}'
+    add_resource(acct, "actors", payload)
 
     #
     # -----------------------------------------------------------------------
     # add movies - properly formatted, should work unless user does not have
     # permission or if JWTs have expried
     # first must find ID of actors
-    print("\n* Adding movies *")       
-    #actor_list = get_actors(acct)
+    print("\n* Adding movies: should pass if user has permission *")       
     actor_list = get_resource(acct, "actors")
     if len(actor_list) == 0:
-        print("No actors available to add movies. Check permissions when adding actors.")
+        print("No actors available to add movies. Check permissions " +
+              "when adding actors.")
     else:
         for movie in MOVIES:
-            payload = ('{"title": ' + '"' + movie[0] + '"' + ', "release_date": ' +
-                       '"' + movie[1] + '"' + ', "cast": ' + '[')
+            payload = ('{"title": ' + '"' + movie[0] + '"' +
+                       ', "release_date": ' + '"' + movie[1] + '"' +
+                       ', "cast": ' + '[')
             # choose random number to determine how many actors to add to movie
             # to match actor_list indeces, had to modify with -1 on len
             # then add one to represent a number from 1 to actors
@@ -151,15 +146,66 @@ for acct in ACCTS:
                     payload += ", "
             payload += "]}"
             add_resource(acct, "movies", payload)
-    # TODO add movie with missing fields, no cast, and wrong actor IDs
-
+    #
+    # add movie with missing field(s). this should fail regardless of
+    # permissions
+    print("\nMissing data. Should fail regardless of permission.")
+    payload = '{"title": "Raising Arizona"}'
+    add_resource(acct, "actors", payload)   
+    #
+    # add movie with empty cast list. this should fail regardless of
+    # permissions
+    print("\nEmpty cast list. Should fail regardless of permission.")
+    payload = ('{"title": "Raising Arizona", "release_date":' +
+               ' "01/01/2000", "cast": []}')
+    add_resource(acct, "actors", payload)   
     #
     # -----------------------------------------------------------------------
     # update actor
-
+    print("\n* Updating actor record: should pass if user has permission *")       
+    actor_list = get_resource(acct, "actors")
+    if len(actor_list) == 0:
+        print("No actors available to update. Check permissions " +
+              "when adding actors.")
+    # update first record available
+    else:
+        actor = actor_list[0]
+        payload = '{"name": "UpdateTest Actor"}'
+        print("...attempting to update", actor)
+        print("...with " + payload)
+        update_id = actor['id']
+        update_resource(acct, "actors", payload, update_id)
+        #
+        # get new actor list to verify
+        actor_list = get_resource(acct, "actors")
+        for actor in actor_list:
+            if actor['id'] == update_id:
+                print("...updated: ", actor)
+                break
     #
     # -----------------------------------------------------------------------
     # update movie
+    print("\n* Updating movie record: should pass if user has permission *")       
+    movie_list = get_resource(acct, "movies")
+    if len(movie_list) == 0:
+        print("No movies available to update. Check permissions " +
+              "when adding movies.")
+    # update first record available
+    else:
+        movie = movie_list[0]
+        payload = '{"title": "The Updated Movie"}'
+        print("...attempting to update", movie)
+        print("...with " + payload)
+        update_id = movie['id']
+        update_resource(acct, "movies", payload, update_id)
+        #
+        # get new movie list to verify
+        movie_list = get_resource(acct, "movies")
+        for movie in movie_list:
+            if movie['id'] == update_id:
+                print("...updated: ", movie)
+                break
+
 
     #
     # -----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #########################################################################
 #
-# @file name: test_app.py
-# @purpose: test file of backend app
+# @file name: test_app_unit_local.py
+# @purpose: test file of backend app on local instance
 # @author: Tony Burge
 # @date: 2020-09-09
 #
