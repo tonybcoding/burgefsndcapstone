@@ -47,14 +47,6 @@ ACCTS = [
 #
 # data
 #
-# properly completed actors (as long as user has permissions, these
-# entries should work)
-# ACTORS = [
-#     '{"name": "Marion Johnson", "dob": "8/13/1959", "gender": "F"}',
-#     '{"name": "Ashton Phelps", "dob": "4/3/1973", "gender": "M"}',
-#     '{"name": "Fredrik Popolo", "dob": "3/21/1985", "gender": "M"}',
-#     '{"name": "Georgette Milton", "dob": "12/4/1991", "gender": "F"}'
-# ]
 ACTORS = [
     ["Marion Johnson", "8/13/1959", "F"],
     ["Ashton Phelps", "4/3/1973", "M"],

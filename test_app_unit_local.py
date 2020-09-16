@@ -20,7 +20,7 @@ from flask_sqlalchemy import SQLAlchemy
 from app import create_app
 from models import setup_db, Movie, Actor
 from auth import AuthError, requires_auth
-from test_config import jwt_ep, jwt_cd, jwt_ca, jwt_no
+from test_config import jwt_ep, jwt_cd, jwt_ca, jwt_no, ACCTS
 from test_config import movie1, movie2, movie3, actor1, actor2
 from test_config import umovie1, umovie2, umovie3, uactor1, uactor2
 
