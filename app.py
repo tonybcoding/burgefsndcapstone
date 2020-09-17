@@ -16,7 +16,6 @@ from flask_cors import CORS
 from models import db, setup_db, Movie, Actor
 from auth import AuthError, requires_auth
 
-
 #########################################################################
 # main app creation
 #########################################################################

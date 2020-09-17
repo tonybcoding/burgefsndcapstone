@@ -8,7 +8,6 @@
 # @credits: file taken directly from UDacity FSND course
 #
 #########################################################################
-import os
 import json
 from flask import request, _request_ctx_stack, abort
 from functools import wraps
@@ -16,13 +15,15 @@ from jose import jwt
 from urllib.request import urlopen
 
 #
-AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-ALGORITHMS = os.getenv('ALGORITHMS')
-API_AUDIENCE = os.getenv('API_AUDIENCE')
+# constants to reflect domain and audience
+AUTH0_DOMAIN = 'fsnd-finalproject-burge.us.auth0.com'
+ALGORITHMS = ['RS256']
+API_AUDIENCE = 'management'
 
-
-# AuthError Exception
-# A standardized way to communicate auth failure modes
+'''
+AuthError Exception
+A standardized way to communicate auth failure modes
+'''
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
@@ -60,7 +61,6 @@ def get_token_auth_header():
 
     token = parts[1]
     return token
-
 
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
@@ -102,7 +102,7 @@ def verify_decode_jwt(token):
         except jwt.JWTClaimsError:
             raise AuthError({
                 'code': 'invalid_claims',
-                'description': 'Incorrect claims. Check audience and issuer.'
+                'description': 'Incorrect claims. Please, check the audience and issuer.'
             }, 401)
         except Exception:
             raise AuthError({
@@ -113,7 +113,6 @@ def verify_decode_jwt(token):
                 'code': 'invalid_header',
                 'description': 'Unable to find the appropriate key.'
             }, 400)
-
 
 def check_permissions(permission, payload):
     #
@@ -131,7 +130,6 @@ def check_permissions(permission, payload):
     #
     return True
 
-
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
@@ -141,7 +139,7 @@ def requires_auth(permission=''):
             # authenticate user
             try:
                 payload = verify_decode_jwt(token)
-            except Exception:
+            except:
                 abort(401)
             #
             # check permissions

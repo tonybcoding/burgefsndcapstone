@@ -22,7 +22,6 @@ from test_config import ACTORS, MOVIES
 # constants
 URL = "https://burgefsndcapstone.herokuapp.com/"
 
-
 #############################################################################
 # helper functions
 #############################################################################
@@ -34,7 +33,6 @@ def print_greeting():
     print("Testing Casting Application deployed on Heroku")
     print("Submitted by Tony Burge")
     print("#" * 80)
-
 
 # This function is called to set database to a known state
 # Only executive producer role is used. If an error is encountered,
@@ -82,7 +80,7 @@ def set_db_to_known_state():
         # to match actor_list indeces, had to modify with -1 on len
         # then add one to represent a number from 1 to actors
         cast_num = randint(0, len(actor_list) - 1) + 1
-        for x in range(0, cast_num):
+        for x in range (0, cast_num):
             payload += str(actor_list[x]['id'])
             if x != cast_num - 1:
                 payload += ", "
@@ -96,7 +94,6 @@ def set_db_to_known_state():
     print("\n* Movies *")
     print(get_resource(acct, "movies"))
     print("\n* Database Ready *\n\n")
-
 
 # function to get actor or movie list based on "resource" argument passed
 def get_resource(acct, resource):
@@ -115,7 +112,6 @@ def get_resource(acct, resource):
         print("Failed: " + res.json()['message'])
     return resource_list
 
-
 # function to add new actor or movie based on "resource" agrument passed
 def add_resource(acct, resource, payload):
     #
@@ -127,10 +123,9 @@ def add_resource(acct, resource, payload):
     print("......adding: " + payload + "...", end='')
     res = requests.post(url, data=payload, headers=header)
     if res.json()['success']:
-        print("Success")
+        print("Success" )
     else:
         print("Failed: " + res.json()['message'])
-
 
 # function to update actor or movie based on "resource" argument based
 def update_resource(acct, resource, payload, id):
@@ -142,10 +137,9 @@ def update_resource(acct, resource, payload, id):
     }
     res = requests.patch(url, data=payload, headers=header)
     if res.json()['success']:
-        print("Success")
+        print("Success" )
     else:
         print("Failed: " + res.json()['message'])
-
 
 # function to delete actor or movie based on id
 def delete_resource(acct, resource, id):
@@ -154,13 +148,12 @@ def delete_resource(acct, resource, id):
     header = {
       "Authorization": f"Bearer {acct['jwt']}",
       "Content-Type": "application/json"
-    }
+    }    
     res = requests.delete(url, headers=header)
     if res.json()['success']:
-        print("Success")
+        print("Success" )
     else:
         print("Failed: " + res.json()['message'])
-
 
 ##########################################################################
 # MAIN APP

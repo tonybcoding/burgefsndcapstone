@@ -24,8 +24,7 @@ if not database_path:
 #
 # instantiate SQLAlchemy
 db = SQLAlchemy()
-
-
+#
 # function to bind flask app with SQLAlchemy session
 def setup_db(app):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
@@ -33,7 +32,6 @@ def setup_db(app):
     db.app = app
     db.init_app(app)
     db.create_all()
-
 
 #
 #########################################################################
@@ -47,11 +45,9 @@ def setup_db(app):
 # movie.id and actor.id are lower case since they refer to the table names
 # movie and actor and not the class names Movie/Actor
 moviecast = db.Table('moviecast',
-                     db.Column('movie_id', db.Integer,
-                               db.ForeignKey('movie.id')),
-                     db.Column('actor_id', db.Integer,
-                               db.ForeignKey('actor.id'))
-                     )
+    db.Column('movie_id', db.Integer, db.ForeignKey('movie.id')),
+    db.Column('actor_id', db.Integer, db.ForeignKey('actor.id'))
+)
 
 
 class Movie(db.Model):
@@ -63,9 +59,9 @@ class Movie(db.Model):
     # and a "virtual" propert in Actor called "movies", so we can access with
     # actor.movies
     castmembers = db.relationship('Actor', secondary=moviecast,
-                                  cascade="all,delete",
-                                  backref=db.backref('movies', lazy='dynamic')
-                                  )
+        cascade = "all,delete",
+        backref=db.backref('movies', lazy='dynamic')
+    )
 
     # methods to insert, delete, and update Movie objects
     def insert(self, cast_list):
@@ -76,7 +72,7 @@ class Movie(db.Model):
                 this_actor = Actor.query.filter(Actor.id == actor_id).one()
                 this_actor.movies.append(self)
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             print("aborting in models")
             abort(422)
@@ -85,7 +81,7 @@ class Movie(db.Model):
         try:
             db.session.delete(self)
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             abort(422)
 
@@ -100,9 +96,9 @@ class Movie(db.Model):
                     this_actor = Actor.query.filter(Actor.id == actor_id).one()
                     print("adding", this_actor.name)
                     this_actor.movies.append(self)
-            # commit changes
+            # commit changes            
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             abort(422)
 
@@ -121,7 +117,7 @@ class Actor(db.Model):
         try:
             db.session.add(self)
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             abort(422)
 
@@ -129,14 +125,14 @@ class Actor(db.Model):
         try:
             db.session.delete(self)
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             abort(422)
 
     def update(self):
         try:
             db.session.commit()
-        except Exception:
+        except:
             db.session.rollback()
             abort(422)
 
@@ -146,5 +142,5 @@ class Actor(db.Model):
             "id": self.id,
             "name": self.name,
             "dob": self.dob,
-            "gender": self.gender
+            "gender": self.gender            
         }
