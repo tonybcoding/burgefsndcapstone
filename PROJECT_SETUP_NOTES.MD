@@ -90,11 +90,11 @@ My development platform is:
 
             **To get web-based token (max 24 hours)**
 
-https://fsnd-finalproject-burge.us.auth0.com/authorize?
-audience=management&
-response_type=token&
-client_id=aCA7EjAuTW1h8cYBS8BnPz9lKXvKqlbM&
-redirect_uri=http://127.0.0.1:5000/callback
+            https://fsnd-finalproject-burge.us.auth0.com/authorize?
+            audience=management&
+            response_type=token&
+            client_id=aCA7EjAuTW1h8cYBS8BnPz9lKXvKqlbM&
+            redirect_uri=http://127.0.0.1:5000/login-results
 
             - Client secret: PnZGgR-m42u4e12Mpr81jgFc1J48O4mQBB6fNt6fQOZBu6hZ5bKdEQBMghcHLgHB
             - ID token expiration (30 days or 2592000 seconds)
@@ -209,3 +209,12 @@ curl -X PATCH 'http://localhost:5000/actors/-1' --header 'Content-Type: applicat
 
 * should fail: no recognized fields
 curl -X PATCH 'http://localhost:5000/actors/1' --header 'Content-Type: application/json' --data-raw '{"uselessfield": "whatever"}'
+
+
+## TODO
+* deploy on heroku
+* how should evaluator set up (database, etc)
+    * https://knowledge.udacity.com/questions/239566
+* clean up this file
+* create thorough README
+* update JWTs prior to submission
