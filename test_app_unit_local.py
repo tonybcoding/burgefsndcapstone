@@ -3,7 +3,7 @@
 # @file name: test_app_unit_local.py
 # @purpose: test file of backend app on local instance. Although permissions
 # are tested in this file, the focus is on each possible endpoint error.
-# conversely, test_app_hosted.py thoroughly tests permissions accessing 
+# conversely, test_app_hosted.py thoroughly tests permissions accessing
 # the deployed instance on heroku and associated postgres database.
 # @author: Tony Burge
 # @date: 2020-09-09
